@@ -1,0 +1,42 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [ "master" ]
+    tags:
+      - "v*"   # Runs when you push a version tag like v1.0.0
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Release]
+    
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Install the .NET Core workload
+      - name: Install .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Publish the app.
+      - name: Publish app
+        run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+
+      # zip to archive
+      - name: Zip published files
+        run: Compress-Archive -Path ./publish/* -DestinationPath ./MyApp-${{ github.ref_name }}.zip
+
+      # upload the file to release.
+      - name: Upload release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./MyApp-${{ github.ref_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
