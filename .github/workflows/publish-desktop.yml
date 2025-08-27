@@ -2,16 +2,18 @@ name: Build and Release
 
 on:
   push:
-    branches: [ "master" ]
     tags:
       - "v*"   # Runs when you push a version tag like v1.0.0
+
+permissions:
+  contents: write
 
 jobs:
   build:
     strategy:
       matrix:
         configuration: [Release]
-    
+
     runs-on: windows-latest
 
     steps:
